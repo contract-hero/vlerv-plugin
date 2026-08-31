@@ -1,0 +1,29 @@
+{
+  "name": "vlerv",
+  "version": "0.1.0",
+  "description": "Send local files straight to your paired Vlervtifacts devices over a direct, end-to-end encrypted peer-to-peer link, and offer device pairing the moment a Remote Control session starts.",
+  "author": {
+    "name": "Contract Hero",
+    "email": "alilloig@gmail.com"
+  },
+  "homepage": "https://github.com/contract-hero/vlerv-plugin",
+  "repository": "https://github.com/contract-hero/vlerv-plugin",
+  "license": "MIT",
+  "keywords": [
+    "vlerv",
+    "vlervtifacts",
+    "file-transfer",
+    "peer-to-peer",
+    "remote-control",
+    "pairing"
+  ],
+  "mcpServers": {
+    "vlerv": {
+      "type": "stdio",
+      "command": "bash",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/bin/vlerv-mcp-launch.sh"
+      ]
+    }
+  }
+}
