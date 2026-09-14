@@ -1,6 +1,11 @@
 {
   "_comment": "Pins the vlerv-mcp release the launcher downloads. scripts/publish-release.sh rewrites version and assets. An empty assets object means nothing is published yet.",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "repo": "contract-hero/vlerv-plugin",
-  "assets": {}
+  "assets": {
+    "darwin-arm64": {
+      "name": "vlerv-mcp-0.1.0-darwin-arm64.tar.gz",
+      "sha256": "09c54b6254302b60e50a6215c87b13f118960a618b5847369c90a5985fe1bf07"
+    }
+  }
 }
