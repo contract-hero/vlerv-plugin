@@ -7,9 +7,7 @@ description: >-
   they ask to share, send or open a file on their phone, tablet or other Mac.
   Also use when a link failed on a device with "canonicalize failed", "No such
   file or directory", or a path that plainly exists on the Mac, or when a link
-  looked clickable in Claude Desktop but did nothing. Short version: never
-  hand-write vlerv://open?path=…, always mint it with share_link, and put the
-  https form it returns in chat.
+  looked clickable in Claude Desktop but did nothing.
 ---
 
 # Writing vlerv:// links that work everywhere
@@ -36,7 +34,9 @@ Nothing is wrong with the file. The link was incomplete.
 ## The fix: mint it, never type it
 
 Call `share_link` with the absolute path. It returns two forms of one link,
-both carrying `from=<this Mac's node id>`:
+both carrying `from=<this Mac's node id>`. If it fails saying the app and the
+plugin are out of step, ask the user to update Vlervtifacts; never hand-write
+a link to recover.
 
 ```
 https://contracthero.dev/vlerv/l#open?path=%2FUsers%2Fyou%2Fworkspace%2Freport.html&from=e35eb3e489…
@@ -51,7 +51,8 @@ fragment straight back to Vlervtifacts; the path travels in the fragment, so
 the web host never receives it.
 
 The raw `vlerv://` form is for a QR code, the macOS share sheet and the CLI.
-The app's address bar takes either form.
+The app's address bar takes either form. Only `open` links have an https twin;
+a `pair` or `receive` link is always the raw form.
 
 ## One link, both places
 
@@ -66,16 +67,15 @@ There is no separate "local version" to also produce:
 A minted link is a superset of a hand-written one, so there is no judgement
 call. **Always mint.**
 
-## Two things to tell the user when they matter
+## Tell the user when it matters
 
 **Vlervtifacts must be running on the Mac when the link is opened.** The pull
 is peer-to-peer with nothing uploaded and nothing queued. If the Mac is closed
 the other device says "Device unreachable / Try again", which is accurate.
 
-**The `https` form is the tappable one on iOS.** A raw `vlerv://` link pasted
-into Notes or Messages stays inert. The `https` form opens Safari for one
-moment, then Vlervtifacts. The macOS share sheet (Share ▾ → *Share link…*) and
-a QR code take the raw form.
+**The `https` form is a redirect page.** It lives in `contract-hero/contract-hero-devfolio`
+at `site/vlerv/l/index.html` and hands the fragment to the `vlerv://` handler. The macOS
+share sheet (Share ▾ → *Share link…*) and a QR code take the raw form.
 
 ## If the device is not paired yet
 
@@ -98,6 +98,6 @@ machines.
 ## Before you send a link
 
 1. Did `share_link` produce it? If you typed `vlerv://open?path=` yourself, stop.
-2. Is it the `https` form? A raw `vlerv://` in chat looks like a link and does nothing.
+2. Is it the `https` form? Claude Desktop and iOS plain text do not open a raw `vlerv://`.
 3. Is it for the user's own device? If not, `beam_artifact`.
 4. Will the Mac be running when they open it? If not, say so.
