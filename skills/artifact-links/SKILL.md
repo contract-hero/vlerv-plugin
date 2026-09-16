@@ -50,8 +50,8 @@ both places even when it looks like a link. The `https` page hands the
 fragment straight back to Vlervtifacts; the path travels in the fragment, so
 the web host never receives it.
 
-Give the raw `vlerv://` form only where it is typed or scanned, not clicked:
-the app's address bar, a QR code, the macOS share sheet, the CLI.
+The raw `vlerv://` form is for a QR code, the macOS share sheet and the CLI.
+The app's address bar takes either form.
 
 ## One link, both places
 
@@ -74,8 +74,8 @@ the other device says "Device unreachable / Try again", which is accurate.
 
 **The `https` form is the tappable one on iOS.** A raw `vlerv://` link pasted
 into Notes or Messages stays inert. The `https` form opens Safari for one
-moment, then Vlervtifacts. The macOS share sheet (Share ▾ → *Share link…*), a
-QR code, or the app's address bar take the raw form.
+moment, then Vlervtifacts. The macOS share sheet (Share ▾ → *Share link…*) and
+a QR code take the raw form.
 
 ## If the device is not paired yet
 
