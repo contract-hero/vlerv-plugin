@@ -84,10 +84,19 @@ never builds:
 | Order | Source |
 |---|---|
 | 1 | `$VLERV_MCP_BIN` — explicit override |
-| 2 | `~/.cache/vlerv-plugin/` — a verified earlier download |
-| 3 | `$VLERV_SOURCE_REPO/target/{release,debug}/vlerv-mcp` — a maintainer's checkout of the private source repo |
+| 2 | `$VLERV_SOURCE_REPO/target/**/{release,debug}/vlerv-mcp` — a maintainer's checkout of the private source repo |
+| 3 | `~/.cache/vlerv-plugin/` — a verified earlier download |
 | 4 | `vlerv-mcp` on `$PATH` |
 | 5 | Download from this repo's releases, verify, cache |
+
+Step 2 searches the plain `target/` and the rust target-triple `target/<triple>/`
+directories, and runs the **newest** build it finds. `publish-release.sh` builds
+with `--target`, so the triple directory is usually the fresh one and the plain
+`target/release/` is an older leftover.
+
+Step 2 outranks the cache on purpose. The cache key holds the version pinned in
+`bin/manifest.json`, not the build date, so a maintainer who edits the server
+and rebuilds keeps re-running the same cached download until the pin moves.
 
 ## Releasing (maintainers)
 
