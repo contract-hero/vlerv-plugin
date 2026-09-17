@@ -10,11 +10,17 @@
 # Resolution order:
 #
 #   1. $VLERV_MCP_BIN                 — explicit override, wins over everything.
-#   2. cache                          — a verified download from an earlier run.
-#   3. $VLERV_SOURCE_REPO/target/...  — a maintainer's local checkout of the
+#   2. $VLERV_SOURCE_REPO/target/...  — a maintainer's local checkout of the
 #                                       private source repo. Never downloads.
+#   3. cache                          — a verified download from an earlier run.
 #   4. $PATH                          — a system-wide install.
 #   5. download                       — fetch, verify, cache, exec.
+#
+# The source checkout outranks the cache, and that order is the whole point of
+# step 2. The cache key carries the PINNED version, not the build date, so a
+# maintainer who edits the server and rebuilds keeps hitting the same cached
+# file until the pin moves. The one person whose local build must win was the
+# one person it lost against.
 #
 # Anything on stdout would corrupt the MCP stdio stream, so every message goes
 # to stderr, which Claude Code captures as MCP server logs.
@@ -48,6 +54,17 @@ case "$(uname -m)" in
 esac
 PLATFORM="${os}-${arch}"
 
+# The rust target triple for this platform. `publish-release.sh` builds with
+# `--target`, which puts the binary under `target/<triple>/release/` and leaves
+# whatever sits in the plain `target/release/` untouched and older.
+case "${PLATFORM}" in
+  darwin-arm64)  TRIPLE=aarch64-apple-darwin ;;
+  darwin-x86_64) TRIPLE=x86_64-apple-darwin ;;
+  linux-arm64)   TRIPLE=aarch64-unknown-linux-gnu ;;
+  linux-x86_64)  TRIPLE=x86_64-unknown-linux-gnu ;;
+  *)             TRIPLE="" ;;
+esac
+
 # --- manifest ---------------------------------------------------------------
 [ -f "${MANIFEST}" ] || die "missing ${MANIFEST}."
 
@@ -63,17 +80,40 @@ EOF
 
 CACHED="${CACHE_DIR}/vlerv-mcp-${VERSION}-${PLATFORM}"
 
-# --- 2. verified cache ------------------------------------------------------
-[ -x "${CACHED}" ] && exec "${CACHED}" "$@"
-
-# --- 3. maintainer's local source checkout ----------------------------------
+# --- 2. maintainer's local source checkout ----------------------------------
+# Four directories can hold a build, and a maintainer switches between them:
+# `cargo build --release` writes one, `--target <triple>` writes another, and
+# `publish-release.sh` only ever writes the triple one. Picking the NEWEST
+# instead of the first in a fixed list is what stops an abandoned build from
+# shadowing today's.
 if [ -n "${VLERV_SOURCE_REPO:-}" ]; then
-  for build in release debug; do
-    candidate="${VLERV_SOURCE_REPO}/target/${build}/vlerv-mcp"
-    [ -x "${candidate}" ] && exec "${candidate}" "$@"
+  candidates=()
+  for dir in "target/release" "target/debug"; do
+    candidates+=("${VLERV_SOURCE_REPO}/${dir}/vlerv-mcp")
   done
+  if [ -n "${TRIPLE}" ]; then
+    for dir in "target/${TRIPLE}/release" "target/${TRIPLE}/debug"; do
+      candidates+=("${VLERV_SOURCE_REPO}/${dir}/vlerv-mcp")
+    done
+  fi
+
+  present=()
+  for candidate in "${candidates[@]}"; do
+    [ -x "${candidate}" ] && present+=("${candidate}")
+  done
+
+  if [ "${#present[@]}" -gt 0 ]; then
+    # `ls -t` sorts by mtime, newest first. One name per line, and none of
+    # these paths can hold a newline: they are this script's own literals.
+    newest="$(ls -t "${present[@]}" | head -n 1)"
+    log "using the local build at ${newest} (VLERV_SOURCE_REPO is set)."
+    exec "${newest}" "$@"
+  fi
   log "VLERV_SOURCE_REPO is set but no vlerv-mcp build was found under it; continuing."
 fi
+
+# --- 3. verified cache ------------------------------------------------------
+[ -x "${CACHED}" ] && exec "${CACHED}" "$@"
 
 # --- 4. system install ------------------------------------------------------
 if command -v vlerv-mcp >/dev/null 2>&1; then
